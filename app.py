@@ -109,7 +109,7 @@ with col4:
 pd_stream.markdown("---")
 
 # 6. Primary Visual Graphic Generation
-col_left, col_right = pd_stream.columns()
+col_left, col_right = pd_stream.columns(2)
 
 with col_left:
     pd_stream.subheader("Interactive Term Structure Analysis")
@@ -166,4 +166,5 @@ with col_right:
 
 pd_stream.markdown("---")
 pd_stream.caption("Designed for Academic Portfolio Validation Architecture — Developed via automated AI compilation routines.")
+
 
