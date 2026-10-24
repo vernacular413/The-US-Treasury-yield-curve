@@ -12,12 +12,21 @@ pd_stream.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Premium CSS Styling
+# Custom Premium CSS Styling for Elite Visual Separation
 pd_stream.markdown("""
     <style>
     .main { background-color: #0e1117; }
     h1, h2, h3 { color: #ffffff; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-    .stMetric { background-color: #161b22; border: 1px solid #30363d; padding: 15px; border-radius: 8px; }
+    div[data-testid="stMetricValue"] { font-size: 24px !important; }
+    div[data-testid="stMetricLabel"] { font-size: 13px !important; white-space: nowrap !important; }
+    .reportview-container .main .block-container { padding-top: 2rem; }
+    .analysis-card {
+        background-color: #161b22; 
+        border: 1px solid #30363d; 
+        padding: 20px; 
+        border-radius: 8px;
+        margin-top: 10px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -34,25 +43,19 @@ def generate_yield_curve_data():
     records = []
     
     for i, dt in enumerate(dates):
-        # Cyclical structural shift: Transition from normal -> deeply inverted -> flat curve
         if i < 40:
-            # Phase 1: Steep Normal Curve (Expanding Economy)
             base_short = 2.5 + np.sin(i/10) * 0.3
             base_long = 4.5 + np.cos(i/15) * 0.2
         elif i < 100:
-            # Phase 2: Inverted Curve (Monetary Tightening / Recession Warning)
             base_short = 5.2 + np.sin(i/12) * 0.2
             base_long = 3.8 - np.cos(i/20) * 0.3
         else:
-            # Phase 3: Flat / Normalizing Curve (Economic Re-balancing)
             base_short = 3.5 + np.sin(i/15) * 0.1
             base_long = 3.8 + np.sin(i/25) * 0.15
             
-        # Generate custom interpolation for maturities
         yields = []
         for m in maturities_months:
-            weight = (m - 1) / (360 - 1) # Normalized maturity scale
-            # Add synthetic micro-volatility
+            weight = (m - 1) / (360 - 1)
             noise = np.random.normal(0, 0.04)
             current_yield = base_short + (base_long - base_short) * np.sqrt(weight) + noise
             yields.append(round(max(0.1, current_yield), 3))
@@ -74,7 +77,7 @@ pd_stream.sidebar.markdown("Adjust structural parameters to isolate macro-financ
 selected_date_str = pd_stream.sidebar.select_slider(
     "Select Historical Timeline Environment:",
     options=[r['Date'] for r in records],
-    value=records[0]['Date']
+    value=records[60]['Date']
 )
 
 current_record = next(r for r in records if r['Date'] == selected_date_str)
@@ -92,31 +95,29 @@ pd_stream.title("📊 US Treasury Yield Curve Intelligence Workspace")
 pd_stream.markdown(f"**Target Microeconomic Environment Context Active:** `Timeline Matrix Run: {selected_date_str}`")
 pd_stream.markdown("---")
 
-# 5. Financial Metric Indicators
-col1, col2, col3, col4 = pd_stream.columns(4)
+# 5. Optimized Financial Metric Indicators (Adjusted spacing to prevent clipping)
+col1, col2, col3, col4 = pd_stream.columns([1.1, 1.1, 1.1, 1.3])
 
 with col1:
-    pd_stream.metric("US Treasury 3-Month (Short End)", f"{current_yields[1]}%", help="Reflects short-term Fed interest rate policy targets.")
+    pd_stream.metric("US Treasury 3-Month", f"{current_yields[1]}%", help="Short-term target.")
 with col2:
-    pd_stream.metric("US Treasury 10-Year (Long End)", f"{current_yields[8]}%", help="Reflects long-term economic growth and inflation expectations.")
+    pd_stream.metric("US Treasury 10-Year", f"{current_yields[8]}%", help="Long-term growth marker.")
 with col3:
     delta_color = "inverse" if current_spread < 0 else "normal"
-    pd_stream.metric("10Y - 2Y Maturity Spread", f"{current_spread}%", delta=f"{current_spread}% Inversion Risk" if current_spread < 0 else "Normal Spread Structure", delta_color=delta_color)
+    pd_stream.metric("10Y - 2Y Spread", f"{current_spread}%", delta=f"{current_spread}% Inversion" if current_spread < 0 else "Normal Structure", delta_color=delta_color)
 with col4:
-    status_label = "🔴 CRITICAL INVERSION" if current_spread < -0.5 else ("🟡 COMPRESSED" if current_spread < 0 else "🟢 EQUILIBRIUM")
+    status_label = "🔴 CRITICAL INVERSION" if current_spread < -0.5 else ("     🟡 COMPRESSED" if current_spread < 0 else "     🟢 EQUILIBRIUM")
     pd_stream.metric("Curve Structural Health Indicator", status_label)
 
 pd_stream.markdown("---")
 
 # 6. Primary Visual Graphic Generation
-col_left, col_right = pd_stream.columns(2)
+col_left, col_right = pd_stream.columns([1.3, 1.2])
 
 with col_left:
     pd_stream.subheader("Interactive Term Structure Analysis")
     
     fig = pgo.Figure()
-    
-    # Render Target Curve Plot
     fig.add_trace(pgo.Scatter(
         x=maturity_labels,
         y=current_yields,
@@ -127,7 +128,6 @@ with col_left:
         hovertemplate='Maturity: %{x}<br>Sovereign Yield: %{y}%<extra></extra>'
     ))
     
-    # Custom Chart Aesthetics
     fig.update_layout(
         template="plotly_dark",
         plot_bgcolor='rgba(0,0,0,0)',
@@ -144,25 +144,31 @@ with col_right:
     pd_stream.subheader("Macro-Finance Analytical Breakdown")
     
     if current_spread < 0:
-        pd_stream.error(f"### Curve Structural Status: Inverted Spectrum ({current_spread}%)")
-        pd_stream.markdown("""
-        **Economic Interpretation:**
-        Short-term sovereign yields higher than long-term yields indicate aggressive restrictive monetary intervention by the Federal Reserve. 
-        
-        **Banking Sector Risk Multipliers:**
-        * **Net Interest Margin Compression:** Banks borrow on short-term rates and lend on long-term rates. An inverted matrix compresses profitability thresholds.
-        * **Credit Allocation Contraction:** Structural banking stress drops aggregate loan volumes, triggering capital market cooling trends.
-        """)
+        pd_stream.markdown(f"""
+        <div class="analysis-card" style="border-left: 5px solid #ff4b4b;">
+            <h3 style="color: #ff4b4b; margin-top:0;">Curve Status: Inverted Spectrum ({current_spread}%)</h3>
+            <p><strong>Economic Interpretation:</strong><br>
+            Short-term sovereign yields higher than long-term yields indicate aggressive restrictive monetary intervention by the Federal Reserve.</p>
+            <p><strong>Banking Sector Risk Multipliers:</strong></p>
+            <ul>
+                <li><strong>Net Interest Margin Compression:</strong> Banks borrow on short-term rates and lend on long-term rates. An inverted matrix compresses profitability thresholds.</li>
+                <li><strong>Credit Allocation Contraction:</strong> Structural banking stress drops aggregate loan volumes, triggering capital market cooling trends.</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        pd_stream.success(f"### Curve Structural Status: Upward Sloping Equilbrium (+{current_spread}%)")
-        pd_stream.markdown("""
-        **Economic Interpretation:**
-        A standard upward-sloping model reflects healthy systemic risk appetites. Investors demand a higher premium for locking liquidity over long durations.
-        
-        **Banking Sector Risk Multipliers:**
-        * **Optimized Credit Spreads:** Financial institutions capture strong arbitrage margins between short-end deposits and long-end commercial financing lending lines.
-        * **Capital Expansion:** Normal yield curves accelerate standard corporate expansion and lower overall credit defaults.
-        """)
+        pd_stream.markdown(f"""
+        <div class="analysis-card" style="border-left: 5px solid #00cc66;">
+            <h3 style="color: #00cc66; margin-top:0;">Curve Status: Upward Sloping Equilibrium (+{current_spread}%)</h3>
+            <p><strong>Economic Interpretation:</strong><br>
+            A standard upward-sloping model reflects healthy systemic risk appetites. Investors demand a higher premium for locking liquidity over long durations.</p>
+            <p><strong>Banking Sector Risk Multipliers:</strong></p>
+            <ul>
+                <li><strong>Optimized Credit Spreads:</strong> Financial institutions capture strong arbitrage margins between short-end deposits and long-end commercial financing lending lines.</li>
+                <li><strong>Capital Expansion:</strong> Normal yield curves accelerate standard corporate expansion and lower overall credit defaults.</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
 pd_stream.markdown("---")
 pd_stream.caption("Designed for Academic Portfolio Validation Architecture — Developed via automated AI compilation routines.")
