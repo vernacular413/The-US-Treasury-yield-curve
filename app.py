@@ -74,7 +74,7 @@ pd_stream.sidebar.markdown("Adjust structural parameters to isolate macro-financ
 selected_date_str = pd_stream.sidebar.select_slider(
     "Select Historical Timeline Environment:",
     options=[r['Date'] for r in records],
-    value=records[60]['Date']
+    value=records[0]['Date']
 )
 
 current_record = next(r for r in records if r['Date'] == selected_date_str)
@@ -109,7 +109,7 @@ with col4:
 pd_stream.markdown("---")
 
 # 6. Primary Visual Graphic Generation
-col_left, col_right = pd_stream.columns([3, 2])
+col_left, col_right = pd_stream.columns()
 
 with col_left:
     pd_stream.subheader("Interactive Term Structure Analysis")
@@ -123,7 +123,7 @@ with col_left:
         mode='lines+markers',
         name='Active Curve Frame',
         line=dict(color='#00ffcc', width=4),
-        marker=dict(size=10, color='#ffffff', borderwidth=2, bordercolor='#00ffcc'),
+        marker=dict(size=10, color='#ffffff', line=dict(width=2, color='#00ffcc')),
         hovertemplate='Maturity: %{x}<br>Sovereign Yield: %{y}%<extra></extra>'
     ))
     
@@ -166,3 +166,4 @@ with col_right:
 
 pd_stream.markdown("---")
 pd_stream.caption("Designed for Academic Portfolio Validation Architecture — Developed via automated AI compilation routines.")
+
